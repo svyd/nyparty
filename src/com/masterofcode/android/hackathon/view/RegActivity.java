@@ -10,6 +10,7 @@ import com.masterofcode.android.hackathon.utils.RestClient;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,6 +36,16 @@ public class RegActivity extends Activity {
         mContext = this;
         regBtn = (Button) findViewById(R.id.btn_name);
         regBtn.setOnClickListener(getTextDescriptionListener);
+
+        /*btn.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(RegActivity.this,CameraActivity.class);
+				startActivity(intent);
+				
+			}
+		});*/
     }
 	
 	OnClickListener getTextDescriptionListener = new OnClickListener() {
@@ -100,6 +111,9 @@ public class RegActivity extends Activity {
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
+				
+				Intent intent = new Intent(RegActivity.this,CameraActivity.class);
+				startActivity(intent);
 				if (Constants.ISDEBUG)
 					Log.d(Constants.LOGTAG, "id = " + mId + " description = " + mPhotoDescription);
 				RestClient.sendPut(Constants.URL + mId + "/" + Constants.CHECKID, mId);
