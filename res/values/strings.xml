@@ -6,5 +6,6 @@
     <string name="enter_name">Enter Your Name:</string>
     <string name="send">Send</string>
     <string name="retake">Retake</string>
+    <string name="busy_slots">All slots are busy. Please try again later...</string>
 
 </resources>

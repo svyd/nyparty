@@ -1,20 +1,26 @@
 package com.masterofcode.android.hackathon.utils;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 public class RestClient {
@@ -46,7 +52,7 @@ public class RestClient {
         return sb.toString();
     }
 	
-	public static JSONArray connect(String url)
+	public static JSONObject connect(String url)
     {
 		String result;
 		JSONObject json = null;
@@ -59,12 +65,13 @@ public class RestClient {
         // Execute the request
         HttpResponse response;
         try {
-            Log.i("feed_prov",url);
+        	if (Constants.ISDEBUG)
+            	Log.d(Constants.LOGTAG, url);
             response = httpclient.execute(httpget);
             // Examine the response status
             if (Constants.ISDEBUG)
             	Log.d(Constants.LOGTAG, response.getStatusLine().toString());
- 
+            
             // Get hold of the response entity
             HttpEntity entity = response.getEntity();
             // If the response does not enclose an entity, there is no need
@@ -79,7 +86,12 @@ public class RestClient {
                 	Log.d(Constants.LOGTAG, result);
  
                 // A Simple JSONObject Creation
-                json=new JSONObject(result);
+                if (result.equals("null\n") || TextUtils.isEmpty(result)){
+                	json = null;
+                } else {
+                	json=new JSONObject(result);
+                }
+                	
                  
                 // Closing the input stream will trigger connection release
                 instream.close();
@@ -93,46 +105,107 @@ public class RestClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if(json!=null)
-        {
-        	json = json.optJSONObject("value");   // generate exception if no inet
-        	JSONArray jsonArray = json.optJSONArray("items");
-        	return jsonArray;
-    	}
-		return null;
+		return json;
     }	
 	
-	/*public static InputStream getInputStreamFromUrl(String url) {
-		InputStream content = null;
-		try {
-			HttpClient httpclient = new DefaultHttpClient();
-		    HttpResponse response = httpclient.execute(new HttpGet(url));
-		    content = response.getEntity().getContent();
-		} catch (Exception e) {
-		    Log.d("[GET REQUEST]", "Network exception", e);
-		}
-		return content;
+	public static String	sendPut(String url, String id){
+		
+		String result = null;
+		
+		HttpClient httpclient = new DefaultHttpClient();
+		 
+        // Prepare a request object
+        HttpPut httpget = new HttpPut(url); 
+
+        // Execute the request
+        HttpResponse response;
+        try {
+        	if (Constants.ISDEBUG)
+            	Log.d(Constants.LOGTAG, url);
+            response = httpclient.execute(httpget);
+            // Examine the response status
+            if (Constants.ISDEBUG)
+            	Log.d(Constants.LOGTAG, response.getStatusLine().toString());
+            result = String.valueOf(response.getStatusLine().getStatusCode());
+ 
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+		return result;
 	}
 	
-	// Fast Implementation
-	private StringBuilder inputStreamToString(InputStream is) {
-	    String line = "";
-	    StringBuilder total = new StringBuilder();
-	    
-	    // Wrap a BufferedReader around the InputStream
-	    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+	public Boolean sendMedia(String serverUrl, String mediaPath) {
+		HttpURLConnection connection = null;
+		DataOutputStream outputStream = null;
 
-	    // Read response until the end
-	    try {
-			while ((line = rd.readLine()) != null) { 
-			    total.append(line); 
+		String urlServer = serverUrl;
+		String lineEnd = "\r\n";
+		String twoHyphens = "--";
+		
+		int bytesRead, bytesAvailable, bufferSize;
+		byte[] buffer;
+		int maxBufferSize = 1*1024*1024;
+		
+		try {
+			File file = new File(mediaPath);
+			FileInputStream fileInputStream = new FileInputStream(file);
+			URL url = new URL(urlServer);
+			connection = (HttpURLConnection) url.openConnection();
+			
+			// Allow Inputs & Outputs
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setUseCaches(false);
+			
+			// Enable POST method
+			connection.setRequestMethod("POST");
+
+			String boundary = "---------------------------AAAA" + mediaPath + "AAAA";
+
+			connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+
+			outputStream = new DataOutputStream( connection.getOutputStream() );
+			outputStream.writeBytes(lineEnd + twoHyphens + boundary + lineEnd);
+			outputStream.writeBytes("Content-Disposition: form-data; name=\"userfile\";filename=\"" + mediaPath + "\"" + lineEnd);
+			outputStream.writeBytes("Content-Type: application/octet-stream" + lineEnd);
+			outputStream.writeBytes(lineEnd);
+			
+			bytesAvailable = fileInputStream.available();
+			bufferSize = Math.min(bytesAvailable, maxBufferSize);
+			buffer = new byte[bufferSize];
+
+			// Read file
+			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+
+			while (bytesRead > 0) {
+				outputStream.write(buffer, 0, bufferSize);
+				bytesAvailable = fileInputStream.available();
+				bufferSize = Math.min(bytesAvailable, maxBufferSize);
+				bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+			outputStream.writeBytes(lineEnd);
+			outputStream.writeBytes(lineEnd + twoHyphens + boundary + twoHyphens + lineEnd);
+
+			// Responses from the server (code and message)
+			int serverResponseCode = connection.getResponseCode();
+			String serverResponseMessage = connection.getResponseMessage();
+
+			fileInputStream.close();
+			outputStream.flush();
+			outputStream.close();
+
+			if ( (serverResponseCode == 200) && (serverResponseMessage.equals("OK")) ) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception ex) {
+			return false;
 		}
-	    
-	    // Return full string
-	    return total;
-	}*/
+	}
 }
