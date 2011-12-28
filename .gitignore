@@ -12,7 +12,3 @@ gen
 local.properties
 *.jar
 .settings
-.project
-YakChat.iml
-YakChat.ipr
-YakChat.iws
