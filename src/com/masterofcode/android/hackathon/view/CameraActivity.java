@@ -33,6 +33,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 	private Button btnDone;
 	private Bitmap mBitmap;
 	TextView txtView;
+	private String id = null;
 	public static final String EXTRA_STRING = "extra_string";
 
 	@Override
@@ -53,6 +54,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 		txtView = (TextView) findViewById(R.id.text);
 		txtView.setText("Sample Text for test Bubble");
 		btnDone=(Button) findViewById(R.id.btn_takePhoto);
+		id = (String) getIntent().getCharSequenceExtra("id");
 		btnDone.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -96,6 +98,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 				
 				Intent intent = new Intent(CameraActivity.this,PreviewActivity.class);
 				intent.putExtra(EXTRA_STRING,"/sdcard/bubble/"+name+".jpg");
+				intent.putExtra("id", id);
 				startActivity(intent);
 			}
 		}

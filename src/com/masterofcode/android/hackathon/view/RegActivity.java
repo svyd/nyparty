@@ -13,17 +13,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class RegActivity extends Activity {
     
 	Button 				regBtn;
+	TextView			nickName;
 	JSONObject			mJSONObject;
 	String 				mId;
 	String				mPhotoDescription;
+	String				nickNameTxt = "Lol";
 	Context				mContext;
 	
 	
@@ -35,48 +39,18 @@ public class RegActivity extends Activity {
         
         mContext = this;
         regBtn = (Button) findViewById(R.id.btn_name);
+        nickName = (TextView) findViewById(R.id.edit_text_name);
         regBtn.setOnClickListener(getTextDescriptionListener);
-
-        /*btn.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				Intent intent = new Intent(RegActivity.this,CameraActivity.class);
-				startActivity(intent);
-				
-			}
-		});*/
     }
 	
 	OnClickListener getTextDescriptionListener = new OnClickListener() {
 		
 		@Override
 		public void onClick(View v) {
-			AsyncTask task = new ProgressTask().execute(new String[]{Constants.URL + Constants.IDSUFF});
-			/*new Thread(new Runnable() {
-				@Override
-				public void run() {
-					mJSONObject 	= RestClient.connect(Constants.URL + Constants.IDSUFF);
-					if (mJSONObject != null){
-						try {
-							mId 				= mJSONObject.getString("id");
-							mPhotoDescription 	= mJSONObject.getString("caption");
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-						if (Constants.ISDEBUG)
-							Log.d(Constants.LOGTAG, "id = " + mId + " description = " + mPhotoDescription);
-						RestClient.sendPut(Constants.URL + mId + "/" + Constants.CHECKID, mId);
-					} else {
-						runOnUiThread(new Runnable() {
-						    public void run() {
-						    	ApplicationUtils.showToast(mContext, R.string.busy_slots);
-						    }
-						});
-					}
-				}
-			}).start();*/
-			
+			if (!TextUtils.isEmpty(nickName.getText())){
+				nickNameTxt = nickName.getText().toString();
+			}
+			AsyncTask task = new ProgressTask().execute(new String[]{nickNameTxt});
 		}
 	};
 	
@@ -113,10 +87,11 @@ public class RegActivity extends Activity {
 				}
 				
 				Intent intent = new Intent(RegActivity.this,CameraActivity.class);
+				intent.putExtra("id", mId);
 				startActivity(intent);
 				if (Constants.ISDEBUG)
 					Log.d(Constants.LOGTAG, "id = " + mId + " description = " + mPhotoDescription);
-				RestClient.sendPut(Constants.URL + mId + "/" + Constants.CHECKID, mId);
+				RestClient.sendPut(Constants.URL + mId + "/" + Constants.CHECKID, mId, nickNameTxt);
 			} else {
 				runOnUiThread(new Runnable() {
 				    public void run() {
@@ -126,5 +101,5 @@ public class RegActivity extends Activity {
 			}
 	    	return true;
 	       }
-	    }
+	}
 }

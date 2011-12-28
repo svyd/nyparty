@@ -16,6 +16,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -108,37 +110,43 @@ public class RestClient {
 		return json;
     }	
 	
-	public static String	sendPut(String url, String id){
-		
-		String result = null;
-		
-		HttpClient httpclient = new DefaultHttpClient();
-		 
-        // Prepare a request object
-        HttpPut httpget = new HttpPut(url); 
+	public static String	sendPut(String url, String id, String author){
 
-        // Execute the request
-        HttpResponse response;
-        try {
-        	if (Constants.ISDEBUG)
-            	Log.d(Constants.LOGTAG, url);
-            response = httpclient.execute(httpget);
-            // Examine the response status
-            if (Constants.ISDEBUG)
-            	Log.d(Constants.LOGTAG, response.getStatusLine().toString());
-            result = String.valueOf(response.getStatusLine().getStatusCode());
- 
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		String result = null;
+		try{
+			
+			HttpClient httpclient = new DefaultHttpClient();
+			 
+	        // Prepare a request object
+	        HttpPut httpput = new HttpPut(url);
+	        MultipartEntity reqEntity = new MultipartEntity();
+		    reqEntity.addPart("author", new StringBody(author));
+		    httpput.setEntity(reqEntity);
+	        // Execute the request
+	        HttpResponse response;
+	        try {
+	        	if (Constants.ISDEBUG)
+	            	Log.d(Constants.LOGTAG, url);
+	            response = httpclient.execute(httpput);
+	            // Examine the response status
+	            if (Constants.ISDEBUG)
+	            	Log.d(Constants.LOGTAG, response.getStatusLine().toString());
+	            result = String.valueOf(response.getStatusLine().getStatusCode());
+	 
+	        } catch (ClientProtocolException e) {
+	            e.printStackTrace();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
 		return result;
 	}
 	
-	public Boolean sendMedia(String serverUrl, String mediaPath) {
+	public static Boolean sendMedia(String serverUrl, String mediaPath) {
 		HttpURLConnection connection = null;
 		DataOutputStream outputStream = null;
 
