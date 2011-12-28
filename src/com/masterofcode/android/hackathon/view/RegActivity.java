@@ -21,6 +21,7 @@ public class RegActivity extends Activity {
 			public void onClick(View v) {
 				Intent intent = new Intent(RegActivity.this,CameraActivity.class);
 				startActivity(intent);
+				finish();
 				
 			}
 		});

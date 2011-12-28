@@ -7,20 +7,27 @@ import java.io.OutputStream;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -32,6 +39,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 	private boolean previewRunning = false;
 	private Button btnDone;
 	private Bitmap mBitmap;
+	private boolean oneTouch=true;
 	TextView txtView;
 	public static final String EXTRA_STRING = "extra_string";
 
@@ -56,19 +64,23 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 		btnDone.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-			camera.takePicture(null, picCalBac, picCalBac);
+				if(oneTouch){
+					camera.takePicture(null, picCalBac, picCalBac);
+					oneTouch=false;
+				}
 			}
 			});
-
+		
 	}
 
 	Camera.PictureCallback picCalBac = new PictureCallback() {
+		
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			if (data != null) {	
 				previewRunning = false;
 				
-				Bitmap bmp = BitmapFactory.decodeByteArray(data,0,data.length );
+				Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
 				Bitmap bubble = BitmapFactory.decodeResource(getResources(), R.drawable.speechbubbleup);
 				
 				OutputStream fOut = null;
@@ -84,8 +96,31 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
-				bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+				 TextView tv=(TextView) findViewById(R.id.text);
+			        tv.setDrawingCacheEnabled(true); 
+			        tv.buildDrawingCache(); 
+			        Bitmap b=tv.getDrawingCache(true); 
+			        b.setDensity(160);
+			       
+					Bitmap bmOverlay = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(), Bitmap.Config.ARGB_8888);
+					
+					Canvas canvas = new Canvas(bmOverlay);
+					Paint paint = new Paint();
+					paint.setColor(Color.BLACK);
+					paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+					
+					
+					canvas.drawBitmap(bmp, 0, 0, null);
+					canvas.drawBitmap(bubble, bmp.getWidth()-bubble.getWidth(), 0, null);
+					canvas.drawBitmap(b, bmp.getWidth()-bubble.getWidth()+40, 70, paint);
+					
+				
+				
+				
+				
+			        
+				
+					bmOverlay.compress(Bitmap.CompressFormat.JPEG, 95, fOut);
 				try {
 					fOut.flush();
 					fOut.close();
@@ -97,12 +132,22 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 				Intent intent = new Intent(CameraActivity.this,PreviewActivity.class);
 				intent.putExtra(EXTRA_STRING,"/sdcard/bubble/"+name+".jpg");
 				startActivity(intent);
+				finish();
+				oneTouch=true;
+				
 			}
 		}
 	};
-
+	public static Bitmap loadBitmapFromView(View v) {
+	    Bitmap b = Bitmap.createBitmap( v.getLayoutParams().width, v.getLayoutParams().height, Bitmap.Config.ARGB_8888);                
+	    Canvas c = new Canvas(b);
+	    v.layout(0, 0, v.getLayoutParams().width, v.getLayoutParams().height);
+	    v.draw(c);
+	    return b;
+	}
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+		oneTouch=true;
 		
 		if (previewRunning) {
 			camera.stopPreview();
@@ -170,4 +215,17 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
 		camera.stopPreview();
 		camera.release();
 	}
+	
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if(keyCode==KeyEvent.KEYCODE_BACK&&event.getRepeatCount()==0){
+			Intent intent = new Intent();
+			intent.setClass(getApplicationContext(), RegActivity.class);
+			startActivity(intent);
+			finish();
+			return true;
+		}
+		return false;
+	}
+	
+	
 }
