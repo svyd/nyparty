@@ -14,7 +14,10 @@ public class PreviewActivity extends Activity{
 		setContentView(R.layout.preview);
 		
 		ImageView img = (ImageView) findViewById(R.id.image_preview);
+		
 		String src=getIntent().getStringExtra(CameraActivity.EXTRA_STRING);
+		Bitmap PictFromFile = BitmapFactory.decodeFile(src);
+		img.setBackgroundDrawable(new BitmapDrawable(PictFromFile));
 	}
 
 }
