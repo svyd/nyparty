@@ -3,5 +3,8 @@
 
     <string name="hello">Hello World, RegActivity!</string>
     <string name="app_name">Hackathon MasterOfCode</string>
+    <string name="enter_name">Enter Your Name:</string>
+    <string name="send">Send</string>
+    <string name="retake">Retake</string>
 
 </resources>
