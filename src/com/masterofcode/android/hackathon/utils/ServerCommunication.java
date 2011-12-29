@@ -47,7 +47,7 @@ public class ServerCommunication {
 		return instance;
 	}
 
-	public void doFileUpload(String filePath1, String url, Context mContext){
+	public void doFileUpload(String filePath1, String url){
 		File file1 = new File(filePath1);
 		String urlString = url;
 		if(!TextUtils.isEmpty(urlString))

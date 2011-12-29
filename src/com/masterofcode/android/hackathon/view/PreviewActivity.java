@@ -1,12 +1,8 @@
 package com.masterofcode.android.hackathon.view;
 
-import org.json.JSONException;
-
 import com.masterofcode.android.hackathon.utils.ApplicationUtils;
 import com.masterofcode.android.hackathon.utils.Constants;
 import com.masterofcode.android.hackathon.utils.RestClient;
-import com.masterofcode.android.hackathon.utils.ServerCommunication;
-import com.masterofcode.android.hackathon.view.RegActivity.ProgressTask;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -18,20 +14,19 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.view.KeyEvent;
 import android.widget.ImageView;
-import android.widget.RemoteViews.ActionException;
 
 public class PreviewActivity extends Activity{
 	
-	Context				mContext;
-	String 				src;
-	String				mId;
-	Button 				sendBtn;
-	Button				retakeBtn;
+	private 		Context	mContext;
+	private 		String 	src;
+	private 		String	mId;
+	private 		Button 	sendBtn;
+	private			Button	retakeBtn;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,12 +36,12 @@ public class PreviewActivity extends Activity{
 		mContext 	= this;
 		sendBtn 	= (Button) findViewById(R.id.btn_send);
 		retakeBtn 	= (Button) findViewById(R.id.btn_retake);
-		mId = (String) getIntent().getCharSequenceExtra("id");
+		mId = ApplicationUtils.getPrefProperty(this, "id");
 		ImageView img = (ImageView) findViewById(R.id.image_preview);
 		
 		src=getIntent().getStringExtra(CameraActivity.EXTRA_STRING);
-		Bitmap PictFromFile = BitmapFactory.decodeFile(src);
-		img.setBackgroundDrawable(new BitmapDrawable(PictFromFile));
+		Bitmap pictFromFile = BitmapFactory.decodeFile(src);
+		img.setBackgroundDrawable(new BitmapDrawable(pictFromFile));
 		sendBtn.setOnClickListener(sendPhotoListener);
 		retakeBtn.setOnClickListener(retakePhotoListener);
 	}
@@ -91,11 +86,23 @@ public class PreviewActivity extends Activity{
 	        }
 	    }
 	    protected Boolean doInBackground(final String... args) {
-	    	ServerCommunication.getInstance().doFileUpload(src, Constants.URL + mId + ".json", mContext);
+	    	//ServerCommunication.getInstance().doFileUpload(src, Constants.URL + mId + ".json");
+	    	RestClient.doFileUpload(src, Constants.URL + mId + ".json");
 	    	Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.WEBVIEWURL));
 	    	startActivity(myIntent);
+	    	finish();
 	    	return true;
 	    }
+	}
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if(keyCode==KeyEvent.KEYCODE_BACK&&event.getRepeatCount()==0){
+			Intent intent = new Intent();
+			intent.setClass(getApplicationContext(), CameraActivity.class);
+			startActivity(intent);
+			finish();
+			return true;
+		}
+		return false;
 	}
 
 }

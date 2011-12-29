@@ -11,4 +11,5 @@ public class Constants {
 	public static String 	CHECKID		= "occupy.json";
 	
 	public static String	WEBVIEWURL	= "http://192.168.2.94:3002/phrases/showcase";
+	public static String	KEY_PREF	= "prefs";
 }

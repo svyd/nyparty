@@ -17,8 +17,10 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -146,74 +148,27 @@ public class RestClient {
 		return result;
 	}
 	
-	public static Boolean sendMedia(String serverUrl, String mediaPath) {
-		HttpURLConnection connection = null;
-		DataOutputStream outputStream = null;
-
-		String urlServer = serverUrl;
-		String lineEnd = "\r\n";
-		String twoHyphens = "--";
-		
-		int bytesRead, bytesAvailable, bufferSize;
-		byte[] buffer;
-		int maxBufferSize = 1*1024*1024;
-		
-		try {
-			File file = new File(mediaPath);
-			FileInputStream fileInputStream = new FileInputStream(file);
-			URL url = new URL(urlServer);
-			connection = (HttpURLConnection) url.openConnection();
-			
-			// Allow Inputs & Outputs
-			connection.setDoInput(true);
-			connection.setDoOutput(true);
-			connection.setUseCaches(false);
-			
-			// Enable POST method
-			connection.setRequestMethod("POST");
-
-			String boundary = "---------------------------AAAA" + mediaPath + "AAAA";
-
-			connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-
-			outputStream = new DataOutputStream( connection.getOutputStream() );
-			outputStream.writeBytes(lineEnd + twoHyphens + boundary + lineEnd);
-			outputStream.writeBytes("Content-Disposition: form-data; name=\"userfile\";filename=\"" + mediaPath + "\"" + lineEnd);
-			outputStream.writeBytes("Content-Type: application/octet-stream" + lineEnd);
-			outputStream.writeBytes(lineEnd);
-			
-			bytesAvailable = fileInputStream.available();
-			bufferSize = Math.min(bytesAvailable, maxBufferSize);
-			buffer = new byte[bufferSize];
-
-			// Read file
-			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-			while (bytesRead > 0) {
-				outputStream.write(buffer, 0, bufferSize);
-				bytesAvailable = fileInputStream.available();
-				bufferSize = Math.min(bytesAvailable, maxBufferSize);
-				bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+	public static void doFileUpload(String filePath1, String url){
+		File file1 = new File(filePath1);
+		String urlString = url;
+		if(!TextUtils.isEmpty(urlString))
+			try {
+				HttpClient client = new DefaultHttpClient();
+			    HttpPut post = new HttpPut(urlString);
+			    FileBody bin1 = new FileBody(file1);
+			    MultipartEntity reqEntity = new MultipartEntity();
+			    reqEntity.addPart("phrase[photo]", bin1);
+			    reqEntity.addPart("_method", new StringBody("put"));
+			    post.setEntity(reqEntity);
+			    HttpResponse response = client.execute(post);
+			    HttpEntity resEntity = response.getEntity();
+			    final String response_str = EntityUtils.toString(resEntity);
+			    if (resEntity != null) {
+			    	if (Constants.ISDEBUG)
+			    		Log.d(Constants.LOGTAG, "Response sending: " + response_str);
+			    }
+			} catch (Exception ex){
+				ex.printStackTrace();
 			}
-
-			outputStream.writeBytes(lineEnd);
-			outputStream.writeBytes(lineEnd + twoHyphens + boundary + twoHyphens + lineEnd);
-
-			// Responses from the server (code and message)
-			int serverResponseCode = connection.getResponseCode();
-			String serverResponseMessage = connection.getResponseMessage();
-
-			fileInputStream.close();
-			outputStream.flush();
-			outputStream.close();
-
-			if ( (serverResponseCode == 200) && (serverResponseMessage.equals("OK")) ) {
-				return true;
-			} else {
-				return false;
-			}
-		} catch (Exception ex) {
-			return false;
-		}
 	}
 }
