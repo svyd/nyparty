@@ -47,6 +47,9 @@ public class RegActivity extends Activity {
         setContentView(R.layout.signin);
         
         mContext = this;
+        // go to CameraActivity for testing
+        gotoNextActivity();
+        
         shake = AnimationUtils.loadAnimation(this, R.anim.shake);
         regBtn = (Button) findViewById(R.id.btn_name);
         nickName = (TextView) findViewById(R.id.edit_text_name);

@@ -86,7 +86,6 @@ public class PreviewActivity extends Activity{
 	        }
 	    }
 	    protected Boolean doInBackground(final String... args) {
-	    	//ServerCommunication.getInstance().doFileUpload(src, Constants.URL + mId + ".json");
 	    	RestClient.doFileUpload(src, Constants.URL + mId + ".json");
 	    	Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.WEBVIEWURL));
 	    	startActivity(myIntent);
